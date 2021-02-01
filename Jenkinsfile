@@ -47,6 +47,45 @@ pipeline {
                 }
             }
         }
+
+        stage('Upload') {
+            when {
+                buildingTag()
+            }
+            steps {
+                script {
+                    def server = Artifactory.server 'zextras-artifactory'
+                    def buildInfo = Artifactory.newBuildInfo()
+
+                    def uploadSpec = """{
+								"files": [
+								    {
+										"pattern": "service-discover-base**/*.deb",
+										"target": "debian-local/pool/",
+										"props": "deb.distribution=xenial;deb.component=main;deb.architecture=amd64"
+									},
+									{
+										"pattern": "service-discover-base**/*.deb",
+										"target": "debian-local/pool/",
+										"props": "deb.distribution=bionic;deb.component=main;deb.architecture=amd64"
+									},
+									{
+										"pattern": "service-discover-base*/*.deb",
+										"target": "debian-local/pool/",
+										"props": "deb.distribution=focal;deb.component=main;deb.architecture=amd64"
+									},
+									{
+										"pattern": "service-discover-base*/(*)-(*)-(*).rpm",
+										"target": "rpm-local/zextras/{1}/{1}-{2}-{3}.rpm",
+										"props": "rpm.metadata.arch=x86_64;rpm.metadata.vendor=Zextras"
+									}
+								]
+							}"""
+                    server.upload spec: uploadSpec, buildInfo: buildInfo
+                    server.publishBuildInfo buildInfo
+                }
+            }
+        }
     }
     post {
         always {

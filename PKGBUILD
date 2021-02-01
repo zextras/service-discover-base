@@ -2,10 +2,8 @@
 #  pacur build <target>
 
 targets=(
-  "centos-7"
-  "centos-8"
-  "ubuntu-xenial"
-  "ubuntu-bionic"
+  "centos"
+  "ubuntu"
 )
 pkgname="service-discover-base"
 pkgver="1.9.2"
