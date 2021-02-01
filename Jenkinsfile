@@ -12,6 +12,7 @@ pipeline {
     stages {
         stage('Stash') {
             steps {
+                checkout scm
                 stash includes: "*", name: 'project'
             }
         }
@@ -20,6 +21,9 @@ pipeline {
                 node {
                     label 'pacur-agent-ubuntu-16.04-v1'
                 }
+            }
+            options {
+                skipDefaultCheckout()
             }
             steps {
                 unstash 'project'
@@ -36,6 +40,9 @@ pipeline {
                 node {
                     label 'pacur-agent-centos-7-v1'
                 }
+            }
+            options {
+                skipDefaultCheckout()
             }
             steps {
                 unstash 'project'
