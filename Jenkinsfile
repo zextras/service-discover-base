@@ -27,7 +27,14 @@ pipeline {
             }
             steps {
                 unstash 'project'
-                sh 'pacur-build'
+                sh 'mkdir artifacts'
+                sh 'cp PKGBUILD /pacur'
+                sh 'sudo pacur-build'
+                sh 'sudo cp /pacur/service-discover-base_*.deb artifacts/'
+                dir("artifacts/") {
+                    sh 'echo service-discover-base* | sed -E "s#(service-discover-base_[0-9.]*).*#\\0 \\1_amd64.deb#" | xargs mv'
+                }
+                stash includes: 'artifacts/', name: 'artifacts-deb'
             }
             post {
                 always {
@@ -46,7 +53,14 @@ pipeline {
             }
             steps {
                 unstash 'project'
-                sh 'pacur-build'
+                sh 'mkdir artifacts'
+                sh 'cp PKGBUILD /pacur'
+                sh 'sudo pacur-build'
+                sh 'sudo cp /pacur/service-discover-base*.rpm artifacts/'
+                dir("artifacts/") {
+                    sh 'echo service-discover-base* | sed -E "s#(service-discover-base-[0-9.]*).*#\\0 \\1.x86_64.rpm#" | xargs mv'
+                }
+                stash includes: 'artifacts/', name: 'artifacts-rpm'
             }
             post {
                 always {
@@ -60,30 +74,31 @@ pipeline {
                 buildingTag()
             }
             steps {
+                unstash 'artifacts-rpm'
+                unstash 'artifacts-deb'
                 script {
                     def server = Artifactory.server 'zextras-artifactory'
                     def buildInfo = Artifactory.newBuildInfo()
-
                     def uploadSpec = """{
 								"files": [
 								    {
-										"pattern": "service-discover-base**/*.deb",
+										"pattern": "artifacts/service-discover-base*.deb",
 										"target": "debian-local/pool/",
 										"props": "deb.distribution=xenial;deb.component=main;deb.architecture=amd64"
 									},
 									{
-										"pattern": "service-discover-base**/*.deb",
+										"pattern": "artifacts/service-discover-base*.deb",
 										"target": "debian-local/pool/",
 										"props": "deb.distribution=bionic;deb.component=main;deb.architecture=amd64"
 									},
 									{
-										"pattern": "service-discover-base*/*.deb",
+										"pattern": "artifacts/service-discover-base*.deb",
 										"target": "debian-local/pool/",
 										"props": "deb.distribution=focal;deb.component=main;deb.architecture=amd64"
 									},
 									{
-										"pattern": "service-discover-base*/(*)-(*)-(*).rpm",
-										"target": "rpm-local/zextras/{1}/{1}-{2}-{3}.rpm",
+										"pattern": "artifacts/(service-discover-base)-(*).rpm",
+										"target": "rpm-local/zextras/{1}/{1}-{2}.rpm",
 										"props": "rpm.metadata.arch=x86_64;rpm.metadata.vendor=Zextras"
 									}
 								]

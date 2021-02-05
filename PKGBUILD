@@ -14,7 +14,7 @@ pkgdesclong=(
 )
 maintainer="New Bacon Monster <newbaconmonster@zextras.com>"
 arch="amd64"
-license=("PROPRIETARY")
+license=("MPL-2.0")
 section="meta-package"
 priority="optional"
 url="https://www.zextras.com/"
