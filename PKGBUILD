@@ -6,7 +6,7 @@ targets=(
   "ubuntu"
 )
 pkgname="service-discover-base"
-pkgver="1.9.3"
+pkgver="1.10.0"
 pkgrel="1"
 pkgdesc="Service discover binary, based on HashiCorp Consul"
 pkgdesclong=(
@@ -20,12 +20,12 @@ priority="optional"
 url="https://www.zextras.com/"
 conflicts=("consul")
 sources=(
-  "https://releases.hashicorp.com/consul/${pkgver}/consul_${pkgver}_linux_amd64.zip"
+  "https://releases.hashicorp.com/consul/1.10.0-beta2/consul_1.10.0-beta2_linux_amd64.zip"
 )
 
-# manually update hashs from https://releases.hashicorp.com/consul/${pkgver}/consul_${pkgver}_SHA256SUMS
+# manually update hash from https://releases.hashicorp.com/consul/${pkgver}/consul_${pkgver}_SHA256SUMS
 hashsums=(
-  "2ec9203bf370ae332f6584f4decc2f25097ec9ef63852cd4ef58fdd27a313577"
+  "8ef29f52d95b08d9cd4557d534cb5c035bc91b7dc69ba4324baff21024465470"
 )
 
 package() {
