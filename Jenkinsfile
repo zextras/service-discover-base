@@ -14,7 +14,7 @@ pipeline {
         stage('Stash') {
             steps {
                 checkout scm
-                stash includes: "*", name: 'project'
+                stash includes: "**", name: 'project'
             }
         }
         stage('Build') {
@@ -27,13 +27,7 @@ pipeline {
                     }
                     steps {
                         unstash 'project'
-                        sh 'mkdir artifacts'
-                        sh 'cp PKGBUILD /pacur'
                         sh 'sudo pacur build ubuntu'
-                        sh 'sudo cp /pacur/service-discover-base_*.deb artifacts/'
-                        dir("artifacts/") {
-                            sh 'echo service-discover-base* | sed -E "s#(service-discover-base_[0-9.]*).*#\\0 \\1_amd64.deb#" | xargs mv'
-                        }
                         stash includes: 'artifacts/', name: 'artifacts-deb'
                     }
                     post {
@@ -50,12 +44,9 @@ pipeline {
                     }
                     steps {
                         unstash 'project'
-                        sh 'mkdir artifacts'
-                        sh 'cp PKGBUILD /pacur'
                         sh 'sudo pacur build centos'
-                        sh 'sudo cp /pacur/service-discover-base*.rpm artifacts/'
                         dir("artifacts/") {
-                            sh 'echo service-discover-base* | sed -E "s#(service-discover-base-[0-9.]*).*#\\0 \\1.x86_64.rpm#" | xargs mv'
+                            sh 'echo service-discover-base* | sed -E "s#(service-discover-base-[0-9.]*).*#\\0 \\1.x86_64.rpm#" | xargs sudo mv'
                         }
                         stash includes: 'artifacts/', name: 'artifacts-rpm'
                     }

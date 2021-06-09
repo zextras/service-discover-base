@@ -1,0 +1,11 @@
+{
+    "name": "service-discover-base",
+    "description": "Amazing project description",
+    "build_dir": "/tmp/",
+    "output": "artifacts",
+    "projects": [
+        {
+            "name": "consul"
+        }
+    ]
+}

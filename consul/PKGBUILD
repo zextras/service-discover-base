@@ -12,7 +12,7 @@ pkgdesc="Service discover binary, based on HashiCorp Consul"
 pkgdesclong=(
   "Service discover binary, based on HashiCorp Consul"
 )
-maintainer="Zextras srl <packages@zextras.com>"
+maintainer="Zextras <packages@zextras.com>"
 arch="amd64"
 license=("MPL-2.0")
 section="meta-package"
