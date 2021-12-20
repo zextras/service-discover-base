@@ -1,12 +1,13 @@
-## to run the project inside the container:
-#  pacur build <target>
+# Please refer to the table below to check envoy and consul
+# compatibility:
+#   - https://www.consul.io/docs/connect/proxies/envoy
 
 targets=(
   "centos"
   "ubuntu"
 )
 pkgname="service-discover-base"
-pkgver="1.10.0"
+pkgver="1.10.4"
 pkgrel="1"
 pkgdesc="Service discover binary, based on HashiCorp Consul"
 pkgdesclong=(
@@ -20,12 +21,12 @@ priority="optional"
 url="https://www.zextras.com/"
 conflicts=("consul")
 sources=(
-  "https://releases.hashicorp.com/consul/1.10.0-beta2/consul_1.10.0-beta2_linux_amd64.zip"
+  "https://releases.hashicorp.com/consul/${pkgver}/consul_${pkgver}_linux_amd64.zip"
 )
 
 # manually update hash from https://releases.hashicorp.com/consul/${pkgver}/consul_${pkgver}_SHA256SUMS
 hashsums=(
-  "8ef29f52d95b08d9cd4557d534cb5c035bc91b7dc69ba4324baff21024465470"
+  "2be6414cdce1540c022acda76da55ef6bbd51c537dc2e3d4020652e72daec62d"
 )
 
 package() {
