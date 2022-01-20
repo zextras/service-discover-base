@@ -4,12 +4,14 @@ pipeline {
             label 'base-agent-v1'
         }
     }
+    parameters {
+        booleanParam defaultValue: false, description: 'Whether to upload the packages in playground repositories', name: 'PLAYGROUND'
+    }
     options {
         buildDiscarder(logRotator(numToKeepStr: '20'))
         timeout(time: 1, unit: 'HOURS')
         skipDefaultCheckout()
     }
-
     stages {
         stage('Stash') {
             steps {
@@ -19,10 +21,10 @@ pipeline {
         }
         stage('Build') {
             parallel {
-                stage('Ubuntu 16.04') {
+                stage('Ubuntu 18.04') {
                     agent {
                         node {
-                            label 'pacur-agent-ubuntu-16.04-v1'
+                            label 'pacur-agent-ubuntu-18.04-v1'
                         }
                     }
                     steps {
@@ -36,10 +38,10 @@ pipeline {
                         }
                     }
                 }
-                stage('Centos 7') {
+                stage('Centos 8') {
                     agent {
                         node {
-                            label 'pacur-agent-centos-7-v1'
+                            label 'pacur-agent-centos-8-v1'
                         }
                     }
                     steps {
@@ -58,7 +60,40 @@ pipeline {
                 }
             }
         }
+        stage('Upload To Playground') {
+            when {
+                anyOf {
+                    branch 'playground/*'
+                    expression { params.PLAYGROUND == true }
+                }
+            }
+            steps {
+                unstash 'artifacts-deb'
+                unstash 'artifacts-rpm'
+                script {
+                    def server = Artifactory.server 'zextras-artifactory'
+                    def buildInfo
+                    def uploadSpec
 
+                    buildInfo = Artifactory.newBuildInfo()
+                    uploadSpec = """{
+                        "files": [
+                                    {
+                                        "pattern": "artifacts/service-discover-base*.deb",
+                                        "target": "ubuntu-playground/pool/",
+                                        "props": "deb.distribution=xenial;deb.distribution=bionic;deb.distribution=focal;deb.component=main;deb.architecture=amd64"
+                                    },
+                                    {
+                                        "pattern": "artifacts/(service-discover-base)-(*).rpm",
+                                        "target": "centos8-playground/zextras/{1}/{1}-{2}.rpm",
+                                        "props": "rpm.metadata.arch=x86_64;rpm.metadata.vendor=zextras"
+                                    }                                    
+                        ]
+                    }"""
+                    server.upload spec: uploadSpec, buildInfo: buildInfo, failNoOp: false
+                }
+            }
+        }
         stage('Upload & Promotion Config') {
             when {
                 buildingTag()
@@ -80,14 +115,14 @@ pipeline {
                     buildInfo = Artifactory.newBuildInfo()
                     buildInfo.name += "-ubuntu"
                     uploadSpec= """{
-								"files": [
-								    {
-										"pattern": "artifacts/service-discover-base*.deb",
-										"target": "ubuntu-rc/pool/",
-										"props": "deb.distribution=xenial;deb.distribution=bionic;deb.distribution=focal;deb.component=main;deb.architecture=amd64"
-									}
-								]
-							}"""
+                                "files": [
+                                    {
+                                        "pattern": "artifacts/service-discover-base*.deb",
+                                        "target": "ubuntu-rc/pool/",
+                                        "props": "deb.distribution=xenial;deb.distribution=bionic;deb.distribution=focal;deb.component=main;deb.architecture=amd64"
+                                    }
+                                ]
+                            }"""
                     server.upload spec: uploadSpec, buildInfo: buildInfo, failNoOp: false
                     config = [
                             'buildName'          : buildInfo.name,
@@ -103,45 +138,18 @@ pipeline {
                     Artifactory.addInteractivePromotion server: server, promotionConfig: config, displayName: "Ubuntu Promotion to Release"
                     server.publishBuildInfo buildInfo
 
-                    //centos7
-                    buildInfo = Artifactory.newBuildInfo()
-                    buildInfo.name += "-centos7"
-                    uploadSpec= """{
-								"files": [
-                                    {
-                                        "pattern": "artifacts/(service-discover-base)-(*).rpm",
-                                        "target": "centos7-rc/zextras/{1}/{1}-{2}.rpm",
-                                        "props": "rpm.metadata.arch=x86_64;rpm.metadata.vendor=zextras"
-                                    }
-								]
-							}"""
-                    server.upload spec: uploadSpec, buildInfo: buildInfo, failNoOp: false
-                    config = [
-                            'buildName'          : buildInfo.name,
-                            'buildNumber'        : buildInfo.number,
-                            'sourceRepo'         : 'centos7-rc',
-                            'targetRepo'         : 'centos7-release',
-                            'comment'            : 'Do not change anything! just press the button',
-                            'status'             : 'Released',
-                            'includeDependencies': false,
-                            'copy'               : true,
-                            'failFast'           : true
-                    ]
-                    Artifactory.addInteractivePromotion server: server, promotionConfig: config, displayName: "Centos7 Promotion to Release"
-                    server.publishBuildInfo buildInfo
-
                     //centos8
                     buildInfo = Artifactory.newBuildInfo()
                     buildInfo.name += "-centos8"
                     uploadSpec= """{
-								"files": [
+                                "files": [
                                     {
                                         "pattern": "artifacts/(service-discover-base)-(*).rpm",
                                         "target": "centos8-rc/zextras/{1}/{1}-{2}.rpm",
                                         "props": "rpm.metadata.arch=x86_64;rpm.metadata.vendor=zextras"
                                     }
-								]
-							}"""
+                                ]
+                            }"""
                     server.upload spec: uploadSpec, buildInfo: buildInfo, failNoOp: false
                     config = [
                             'buildName'          : buildInfo.name,
