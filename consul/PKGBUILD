@@ -7,7 +7,7 @@ targets=(
   "ubuntu"
 )
 pkgname="service-discover-base"
-pkgver="1.10.4"
+pkgver="1.10.10"
 pkgrel="1"
 pkgdesc="Service discover binary, based on HashiCorp Consul"
 pkgdesclong=(
@@ -26,7 +26,7 @@ sources=(
 
 # manually update hash from https://releases.hashicorp.com/consul/${pkgver}/consul_${pkgver}_SHA256SUMS
 hashsums=(
-  "2be6414cdce1540c022acda76da55ef6bbd51c537dc2e3d4020652e72daec62d"
+  "5bb7642db502fe280e0353c13b981d62720b2dd2abe249f6083a92f0c8f69235"
 )
 
 package() {
