@@ -8,7 +8,7 @@ targets=(
 )
 pkgname="service-discover-base"
 pkgver="1.10.10"
-pkgrel="2"
+pkgrel="3"
 pkgdesc="Service discover binary, based on HashiCorp Consul"
 pkgdesclong=(
   "Service discover binary, based on HashiCorp Consul"
@@ -16,20 +16,29 @@ pkgdesclong=(
 maintainer="Zextras <packages@zextras.com>"
 arch="amd64"
 license=("MPL-2.0")
-section="meta-package"
+section="admin"
 priority="optional"
 url="https://www.zextras.com/"
 conflicts=("consul")
 sources=(
-  "https://releases.hashicorp.com/consul/1.10.4/consul_1.10.4_linux_amd64.zip"
+  "https://github.com/hashicorp/consul/archive/v${pkgver}.tar.gz"
 )
 
-# manually update hash from https://releases.hashicorp.com/consul/1.10.4/consul_${pkgver}_SHA256SUMS
 hashsums=(
-  "2be6414cdce1540c022acda76da55ef6bbd51c537dc2e3d4020652e72daec62d"
+  "44945636cfe8bf24cd29334043cbb7c01818fe2cd3ac50e329dc2c365e2fe597"
 )
+
+build() {
+  cd "${srcdir}/consul-${pkgver}"
+
+  # consul is incompatible with -buildmode=pie
+  export GOFLAGS="-trimpath -mod=readonly -modcacherw"
+  go build -ldflags="-s -w"
+}
 
 package() {
-  cd "${srcdir}"
-  install -D consul -m 0755 "${pkgdir}/usr/bin/consul"
+  cd "${srcdir}/consul-${pkgver}"
+
+  install -Dm755 consul \
+    "${pkgdir}/usr/bin/consul"
 }
