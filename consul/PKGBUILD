@@ -7,8 +7,8 @@ targets=(
   "ubuntu"
 )
 pkgname="service-discover-base"
-pkgver="1.10.10"
-pkgrel="3"
+pkgver="1.10.12"
+pkgrel="1"
 pkgdesc="Service discover binary, based on HashiCorp Consul"
 pkgdesclong=(
   "Service discover binary, based on HashiCorp Consul"
@@ -22,14 +22,19 @@ url="https://www.zextras.com/"
 conflicts=("consul")
 sources=(
   "https://github.com/hashicorp/consul/archive/v${pkgver}.tar.gz"
+  "https://github.com/davide-baldo/consul/commit/7bee53b54e5a73a6f236859962889b9ecf7ffc9b.patch"
 )
 
 hashsums=(
-  "44945636cfe8bf24cd29334043cbb7c01818fe2cd3ac50e329dc2c365e2fe597"
+  "320ba72b508360d29e1dfc2a13def4560430fa8908c64d435d6722a5aaeaf2c1"
+  "skip"
 )
 
 build() {
   cd "${srcdir}/consul-${pkgver}"
+
+  # Apply websocket support patchset
+  patch -Np1 -i ../7bee53b54e5a73a6f236859962889b9ecf7ffc9b.patch
 
   # consul is incompatible with -buildmode=pie
   export GOFLAGS="-trimpath -mod=readonly -modcacherw"

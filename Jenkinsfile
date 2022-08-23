@@ -21,10 +21,10 @@ pipeline {
         }
         stage('Build') {
             parallel {
-                stage('Ubuntu 18.04') {
+                stage('Ubuntu 20.04') {
                     agent {
                         node {
-                            label 'pacur-agent-ubuntu-18.04-v1'
+                            label 'pacur-agent-ubuntu-20.04-v1'
                         }
                     }
                     steps {
@@ -38,15 +38,15 @@ pipeline {
                         }
                     }
                 }
-                stage('Centos 8') {
+                stage('Rocky 8') {
                     agent {
                         node {
-                            label 'pacur-agent-centos-8-v1'
+                            label 'pacur-agent-rocky-8-v1'
                         }
                     }
                     steps {
                         unstash 'project'
-                        sh 'sudo pacur build centos'
+                        sh 'sudo pacur build rocky'
                         dir("artifacts/") {
                             sh 'echo service-discover-base* | sed -E "s#(service-discover-base-[0-9.]*).*#\\0 \\1.x86_64.rpm#" | xargs sudo mv'
                         }
@@ -81,7 +81,7 @@ pipeline {
                                     {
                                         "pattern": "artifacts/service-discover-base*.deb",
                                         "target": "ubuntu-playground/pool/",
-                                        "props": "deb.distribution=xenial;deb.distribution=bionic;deb.distribution=focal;deb.component=main;deb.architecture=amd64"
+                                        "props": "deb.distribution=focal;deb.component=main;deb.architecture=amd64"
                                     },
                                     {
                                         "pattern": "artifacts/(service-discover-base)-(*).rpm",
@@ -108,8 +108,8 @@ pipeline {
                     def config
 
                     //since artifactory doesn't support a build with multiple repository involved
-                    //we artificially create 3 different artifactory builds by changing the build
-                    //name with "-ubuntu" "-centos7" "-centos8"
+                    //we artificially create 2 different artifactory builds by changing the build
+                    //name with "-ubuntu" "-centos8"
 
                     //ubuntu
                     buildInfo = Artifactory.newBuildInfo()
@@ -119,7 +119,7 @@ pipeline {
                                     {
                                         "pattern": "artifacts/service-discover-base*.deb",
                                         "target": "ubuntu-rc/pool/",
-                                        "props": "deb.distribution=xenial;deb.distribution=bionic;deb.distribution=focal;deb.component=main;deb.architecture=amd64"
+                                        "props": "deb.distribution=focal;deb.component=main;deb.architecture=amd64"
                                     }
                                 ]
                             }"""
