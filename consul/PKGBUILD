@@ -22,7 +22,7 @@ url="https://www.zextras.com/"
 conflicts=("consul")
 sources=(
   "https://github.com/hashicorp/consul/archive/v${pkgver}.tar.gz"
-  "https://github.com/davide-baldo/consul/commit/7bee53b54e5a73a6f236859962889b9ecf7ffc9b.patch"
+  "7bee53b54e5a73a6f236859962889b9ecf7ffc9b.patch"
 )
 
 hashsums=(
