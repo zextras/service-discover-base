@@ -29,12 +29,29 @@ pipeline {
                     }
                     steps {
                         unstash 'project'
-                        sh 'sudo pacur build ubuntu'
-                        stash includes: 'artifacts/', name: 'artifacts-deb'
+                        sh 'sudo pacur build ubuntu-focal'
+                        stash includes: 'artifacts/', name: 'artifacts-focal-deb'
                     }
                     post {
                         always {
-                            archiveArtifacts artifacts: "artifacts/*.deb", fingerprint: true
+                            archiveArtifacts artifacts: "artifacts/*focal*.deb", fingerprint: true
+                        }
+                    }
+                }
+                stage('Ubuntu 22.04') {
+                    agent {
+                        node {
+                            label 'pacur-agent-ubuntu-22.04-v1'
+                        }
+                    }
+                    steps {
+                        unstash 'project'
+                        sh 'sudo pacur build ubuntu-jammy'
+                        stash includes: 'artifacts/', name: 'artifacts-jammy-deb'
+                    }
+                    post {
+                        always {
+                            archiveArtifacts artifacts: "artifacts/*jammy*.deb", fingerprint: true
                         }
                     }
                 }
@@ -68,8 +85,10 @@ pipeline {
                 }
             }
             steps {
-                unstash 'artifacts-deb'
+                unstash 'artifacts-focal-deb'
+                unstash 'artifacts-jammy-deb'
                 unstash 'artifacts-rpm'
+
                 script {
                     def server = Artifactory.server 'zextras-artifactory'
                     def buildInfo
@@ -79,9 +98,14 @@ pipeline {
                     uploadSpec = """{
                         "files": [
                                     {
-                                        "pattern": "artifacts/service-discover-base*.deb",
+                                        "pattern": "artifacts/*focal*.deb",
                                         "target": "ubuntu-playground/pool/",
                                         "props": "deb.distribution=focal;deb.component=main;deb.architecture=amd64"
+                                    },
+                                    {
+                                        "pattern": "artifacts/*jammy*.deb",
+                                        "target": "ubuntu-playground/pool/",
+                                        "props": "deb.distribution=jammy;deb.component=main;deb.architecture=amd64"
                                     },
                                     {
                                         "pattern": "artifacts/(service-discover-base)-(*).rpm",
@@ -99,17 +123,15 @@ pipeline {
                 buildingTag()
             }
             steps {
+                unstash 'artifacts-focal-deb'
+                unstash 'artifacts-jammy-deb'
                 unstash 'artifacts-rpm'
-                unstash 'artifacts-deb'
+
                 script {
                     def server = Artifactory.server 'zextras-artifactory'
                     def buildInfo
                     def uploadSpec
                     def config
-
-                    //since artifactory doesn't support a build with multiple repository involved
-                    //we artificially create 2 different artifactory builds by changing the build
-                    //name with "-ubuntu" "-centos8"
 
                     //ubuntu
                     buildInfo = Artifactory.newBuildInfo()
@@ -117,9 +139,14 @@ pipeline {
                     uploadSpec= """{
                                 "files": [
                                     {
-                                        "pattern": "artifacts/service-discover-base*.deb",
+                                        "pattern": "artifacts/*focal*.deb",
                                         "target": "ubuntu-rc/pool/",
                                         "props": "deb.distribution=focal;deb.component=main;deb.architecture=amd64"
+                                    },
+                                    {
+                                        "pattern": "artifacts/*jammy*.deb",
+                                        "target": "ubuntu-rc/pool/",
+                                        "props": "deb.distribution=jammy;deb.component=main;deb.architecture=amd64"
                                     }
                                 ]
                             }"""
