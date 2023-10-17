@@ -19,17 +19,17 @@ pipeline {
                 stash includes: "**", name: 'project'
             }
         }
-        stage('Build') {
+        stage('Build Ubuntu') {
             parallel {
                 stage('Ubuntu 20.04') {
                     agent {
                         node {
-                            label 'pacur-agent-ubuntu-20.04-v1'
+                            label 'yap-agent-ubuntu-20.04-v2'
                         }
                     }
                     steps {
                         unstash 'project'
-                        sh 'sudo pacur build ubuntu-focal'
+                        sh 'sudo yap build ubuntu-focal .'
                         stash includes: 'artifacts/', name: 'artifacts-focal-deb'
                     }
                     post {
@@ -41,13 +41,13 @@ pipeline {
                 stage('Ubuntu 22.04') {
                     agent {
                         node {
-                            label 'pacur-agent-ubuntu-22.04-v1'
+                            label 'yap-agent-ubuntu-22.04-v2'
                         }
                     }
                     steps {
                         unstash 'project'
-                        sh 'sudo pacur build ubuntu-jammy'
-                        stash includes: 'artifacts/', name: 'artifacts-jammy-deb'
+                        sh 'sudo yap build ubuntu-jammy .'
+                        stash includes: "artifacts/*jammy*.deb", name: 'artifacts-jammy-deb'
                     }
                     post {
                         always {
@@ -55,23 +55,41 @@ pipeline {
                         }
                     }
                 }
-                stage('Rocky 8') {
+            }
+        }
+        stage('Build RHEL') {
+            parallel {
+                stage('RHEL 8') {
                     agent {
                         node {
-                            label 'pacur-agent-rocky-8-v1'
+                            label 'yap-agent-rocky-8-v2'
                         }
                     }
                     steps {
                         unstash 'project'
-                        sh 'sudo pacur build rocky'
-                        dir("artifacts/") {
-                            sh 'echo service-discover-base* | sed -E "s#(service-discover-base-[0-9.]*).*#\\0 \\1.x86_64.rpm#" | xargs sudo mv'
-                        }
-                        stash includes: 'artifacts/', name: 'artifacts-rpm'
+                        sh 'sudo yap build rocky-8 .'
+                        stash includes: 'artifacts/x86_64/*el8*.rpm', name: 'artifacts-rocky-8'
                     }
                     post {
                         always {
-                            archiveArtifacts artifacts: "artifacts/*.rpm", fingerprint: true
+                            archiveArtifacts artifacts: "artifacts/x86_64/*el8*.rpm", fingerprint: true
+                        }
+                    }
+                }
+                stage('RHEL 9') {
+                    agent {
+                        node {
+                            label 'yap-agent-rocky-9-v2'
+                        }
+                    }
+                    steps {
+                        unstash 'project'
+                        sh 'sudo yap build rocky-9 .'
+                        stash includes: 'artifacts/x86_64/*el9*.rpm', name: 'artifacts-rocky-9'
+                    }
+                    post {
+                        always {
+                            archiveArtifacts artifacts: "artifacts/x86_64/*el9*.rpm", fingerprint: true
                         }
                     }
                 }
@@ -87,7 +105,8 @@ pipeline {
             steps {
                 unstash 'artifacts-focal-deb'
                 unstash 'artifacts-jammy-deb'
-                unstash 'artifacts-rpm'
+                unstash 'artifacts-rocky-8'
+                unstash 'artifacts-rocky-9'
 
                 script {
                     def server = Artifactory.server 'zextras-artifactory'
@@ -108,10 +127,15 @@ pipeline {
                                         "props": "deb.distribution=jammy;deb.component=main;deb.architecture=amd64"
                                     },
                                     {
-                                        "pattern": "artifacts/(service-discover-base)-(*).rpm",
-                                        "target": "centos8-playground/zextras/{1}/{1}-{2}.rpm",
+                                        "pattern": "artifacts/x86_64/(service-discover-base)-(*).el8.x86_64.rpm",
+                                        "target": "centos8-playground/zextras/{1}/{1}-{2}.el8.x86_64.rpm",
                                         "props": "rpm.metadata.arch=x86_64;rpm.metadata.vendor=zextras"
-                                    }                                    
+                                    },
+                                    {
+                                        "pattern": "artifacts/x86_64/(service-discover-base)-(*).el9.x86_64.rpm",
+                                        "target": "rhel9-playground/zextras/{1}/{1}-{2}.el9.x86_64.rpm",
+                                        "props": "rpm.metadata.arch=x86_64;rpm.metadata.vendor=zextras"
+                                    }
                         ]
                     }"""
                     server.upload spec: uploadSpec, buildInfo: buildInfo, failNoOp: false
@@ -125,7 +149,8 @@ pipeline {
             steps {
                 unstash 'artifacts-focal-deb'
                 unstash 'artifacts-jammy-deb'
-                unstash 'artifacts-rpm'
+                unstash 'artifacts-rocky-8'
+                unstash 'artifacts-rocky-9'
 
                 script {
                     def server = Artifactory.server 'zextras-artifactory'
@@ -171,8 +196,8 @@ pipeline {
                     uploadSpec= """{
                                 "files": [
                                     {
-                                        "pattern": "artifacts/(service-discover-base)-(*).rpm",
-                                        "target": "centos8-rc/zextras/{1}/{1}-{2}.rpm",
+                                        "pattern": "artifacts/x86_64/(service-discover-base)-(*).el8.x86_64.rpm",
+                                        "target": "centos8-rc/zextras/{1}/{1}-{2}.el8.x86_64.rpm",
                                         "props": "rpm.metadata.arch=x86_64;rpm.metadata.vendor=zextras"
                                     }
                                 ]
@@ -192,6 +217,32 @@ pipeline {
                     Artifactory.addInteractivePromotion server: server, promotionConfig: config, displayName: "Centos8 Promotion to Release"
                     server.publishBuildInfo buildInfo
 
+                    //rhel9
+                    buildInfo = Artifactory.newBuildInfo()
+                    buildInfo.name += "-rhel9"
+                    uploadSpec= """{
+                                "files": [
+                                    {
+                                        "pattern": "artifacts/x86_64/(service-discover-base)-(*).el9.x86_64.rpm",
+                                        "target": "rhel9-rc/zextras/{1}/{1}-{2}.el9.x86_64.rpm",
+                                        "props": "rpm.metadata.arch=x86_64;rpm.metadata.vendor=zextras"
+                                    }
+                                ]
+                            }"""
+                    server.upload spec: uploadSpec, buildInfo: buildInfo, failNoOp: false
+                    config = [
+                            'buildName'          : buildInfo.name,
+                            'buildNumber'        : buildInfo.number,
+                            'sourceRepo'         : 'rhel9-rc',
+                            'targetRepo'         : 'rhel9-release',
+                            'comment'            : 'Do not change anything! just press the button',
+                            'status'             : 'Released',
+                            'includeDependencies': false,
+                            'copy'               : true,
+                            'failFast'           : true
+                    ]
+                    Artifactory.addInteractivePromotion server: server, promotionConfig: config, displayName: "RHEL9 Promotion to Release"
+                    server.publishBuildInfo buildInfo
                 }
             }
         }
