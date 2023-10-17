@@ -2,32 +2,25 @@
 # compatibility:
 #   - https://www.consul.io/docs/connect/proxies/envoy
 
-targets=(
-  "centos"
-  "ubuntu"
-)
 pkgname="service-discover-base"
 pkgver="1.10.12"
 pkgrel="1"
 pkgdesc="Service discover binary, based on HashiCorp Consul"
-pkgdesclong=(
-  "Service discover binary, based on HashiCorp Consul"
-)
 maintainer="Zextras <packages@zextras.com>"
-arch="amd64"
+arch=('x86_64')
 license=("MPL-2.0")
 section="admin"
 priority="optional"
 url="https://www.zextras.com/"
 conflicts=("consul")
-sources=(
+source=(
   "https://github.com/hashicorp/consul/archive/v${pkgver}.tar.gz"
   "7bee53b54e5a73a6f236859962889b9ecf7ffc9b.patch"
 )
 
-hashsums=(
+sha256sums=(
   "320ba72b508360d29e1dfc2a13def4560430fa8908c64d435d6722a5aaeaf2c1"
-  "skip"
+  "SKIP"
 )
 
 build() {
