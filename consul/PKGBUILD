@@ -18,10 +18,8 @@ source=(
   "7bee53b54e5a73a6f236859962889b9ecf7ffc9b.patch"
 )
 
-sha256sums=(
-  "320ba72b508360d29e1dfc2a13def4560430fa8908c64d435d6722a5aaeaf2c1"
-  "SKIP"
-)
+sha256sums=('66549f092c211881c397c1b0a3f66bfa225d0c06f4955751bee28bab9f4dd786'
+  '0a3c7d5af3f2a2b6fbcdd6b7339030d6a949cbd6abede8c2e433f35bb97009ba')
 
 build() {
   cd "${srcdir}/consul-${pkgver}"
