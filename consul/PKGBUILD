@@ -3,29 +3,24 @@
 #   - https://www.consul.io/docs/connect/proxies/envoy
 
 pkgname="service-discover-base"
-pkgver="1.10.12"
-pkgrel="2"
+pkgver="1.17.3"
+pkgrel="1"
 pkgdesc="Service discover binary, based on HashiCorp Consul"
 maintainer="Zextras <packages@zextras.com>"
 arch=('x86_64')
-license=("MPL-2.0")
+license=("BUSL-1.1")
 section="admin"
 priority="optional"
 url="https://www.zextras.com/"
 conflicts=("consul")
 source=(
   "https://github.com/hashicorp/consul/archive/v${pkgver}.tar.gz"
-  "7bee53b54e5a73a6f236859962889b9ecf7ffc9b.patch"
 )
 
-sha256sums=('66549f092c211881c397c1b0a3f66bfa225d0c06f4955751bee28bab9f4dd786'
-  '0a3c7d5af3f2a2b6fbcdd6b7339030d6a949cbd6abede8c2e433f35bb97009ba')
+sha256sums=('bf574ddca90ba820ce1637dae7b648940ed06dbf8a3fe9781b8270b6bf38b9c4')
 
 build() {
   cd "${srcdir}/consul-${pkgver}"
-
-  # Apply websocket support patchset
-  patch -Np1 -i ../7bee53b54e5a73a6f236859962889b9ecf7ffc9b.patch
 
   # consul is incompatible with -buildmode=pie
   export GOFLAGS="-trimpath -mod=readonly -modcacherw"
