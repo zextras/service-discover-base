@@ -29,7 +29,14 @@ pipeline {
                     }
                     steps {
                         unstash 'project'
-                        sh 'sudo yap build ubuntu-focal .'
+                        script {
+                            if (BRANCH_NAME == 'devel') {
+                                def timestamp = new Date().format('yyyyMMddHHmmss')
+                                sh "sudo yap build ubuntu-focal . -r ${timestamp}"
+                            } else {
+                                sh 'sudo yap build ubuntu-focal .'
+                            }
+                        }
                         stash includes: 'artifacts/', name: 'artifacts-focal-deb'
                     }
                     post {
@@ -46,7 +53,14 @@ pipeline {
                     }
                     steps {
                         unstash 'project'
-                        sh 'sudo yap build ubuntu-jammy .'
+                        script {
+                            if (BRANCH_NAME == 'devel') {
+                                def timestamp = new Date().format('yyyyMMddHHmmss')
+                                sh "sudo yap build ubuntu-jammy . -r ${timestamp}"
+                            } else {
+                                sh 'sudo yap build ubuntu-jammy .'
+                            }
+                        }
                         stash includes: "artifacts/*jammy*.deb", name: 'artifacts-jammy-deb'
                     }
                     post {
@@ -67,7 +81,14 @@ pipeline {
                     }
                     steps {
                         unstash 'project'
-                        sh 'sudo yap build rocky-8 .'
+                        script {
+                            if (BRANCH_NAME == 'devel') {
+                                def timestamp = new Date().format('yyyyMMddHHmmss')
+                                sh "sudo yap build rocky-8 . -r ${timestamp}"
+                            } else {
+                                sh 'sudo yap build rocky-8 .'
+                            }
+                        }
                         stash includes: 'artifacts/x86_64/*el8*.rpm', name: 'artifacts-rocky-8'
                     }
                     post {
@@ -84,7 +105,14 @@ pipeline {
                     }
                     steps {
                         unstash 'project'
-                        sh 'sudo yap build rocky-9 .'
+                        script {
+                            if (BRANCH_NAME == 'devel') {
+                                def timestamp = new Date().format('yyyyMMddHHmmss')
+                                sh "sudo yap build rocky-9 . -r ${timestamp}"
+                            } else {
+                                sh 'sudo yap build rocky-9 .'
+                            }
+                        }
                         stash includes: 'artifacts/x86_64/*el9*.rpm', name: 'artifacts-rocky-9'
                     }
                     post {
