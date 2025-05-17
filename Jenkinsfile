@@ -1,7 +1,7 @@
 pipeline {
     agent {
         node {
-            label 'base-agent-v1'
+            label 'base'
         }
     }
     parameters {
@@ -27,20 +27,23 @@ pipeline {
                 stage('Ubuntu 20.04') {
                     agent {
                         node {
-                            label 'yap-agent-ubuntu-20.04-v2'
+                            label 'yap-ubuntu-20-v1'
                         }
                     }
                     steps {
-                        unstash 'project'
-                        script {
-                            if (BRANCH_NAME == 'devel') {
-                                def timestamp = new Date().format('yyyyMMddHHmmss')
-                                sh "sudo yap build ubuntu-focal . -r ${timestamp}"
-                            } else {
-                                sh 'sudo yap build ubuntu-focal .'
+                        container('yap') {
+                            unstash 'project'
+                            script {
+                                sh 'sudo yap prepare ubuntu -g'
+                                if (BRANCH_NAME == 'devel') {
+                                    def timestamp = new Date().format('yyyyMMddHHmmss')
+                                    sh "sudo yap build ubuntu-focal . -r ${timestamp}"
+                                } else {
+                                    sh 'sudo yap build ubuntu-focal .'
+                                }
                             }
+                            stash includes: 'artifacts/', name: 'artifacts-focal-deb'
                         }
-                        stash includes: 'artifacts/', name: 'artifacts-focal-deb'
                     }
                     post {
                         always {
@@ -51,20 +54,23 @@ pipeline {
                 stage('Ubuntu 22.04') {
                     agent {
                         node {
-                            label 'yap-agent-ubuntu-22.04-v2'
+                            label 'yap-ubuntu-22-v1'
                         }
                     }
                     steps {
-                        unstash 'project'
-                        script {
-                            if (BRANCH_NAME == 'devel') {
-                                def timestamp = new Date().format('yyyyMMddHHmmss')
-                                sh "sudo yap build ubuntu-jammy . -r ${timestamp}"
-                            } else {
-                                sh 'sudo yap build ubuntu-jammy .'
+                        container('yap') {
+                            unstash 'project'
+                            sh 'sudo yap prepare ubuntu -g'
+                            script {
+                                if (BRANCH_NAME == 'devel') {
+                                    def timestamp = new Date().format('yyyyMMddHHmmss')
+                                    sh "sudo yap build ubuntu-jammy . -r ${timestamp}"
+                                } else {
+                                    sh 'sudo yap build ubuntu-jammy .'
+                                }
                             }
+                            stash includes: "artifacts/*jammy*.deb", name: 'artifacts-jammy-deb'
                         }
-                        stash includes: "artifacts/*jammy*.deb", name: 'artifacts-jammy-deb'
                     }
                     post {
                         always {
@@ -75,20 +81,23 @@ pipeline {
                 stage('Ubuntu 24.04') {
                     agent {
                         node {
-                            label 'yap-agent-ubuntu-24.04-v2'
+                            label 'yap-ubuntu-24-v1'
                         }
                     }
                     steps {
-                        unstash 'project'
-                        script {
-                            if (BRANCH_NAME == 'devel') {
-                                def timestamp = new Date().format('yyyyMMddHHmmss')
-                                sh "sudo yap build ubuntu-noble . -r ${timestamp}"
-                            } else {
-                                sh 'sudo yap build ubuntu-noble .'
+                        container('yap') {
+                            unstash 'project'
+                            sh 'sudo yap prepare ubuntu -g'                            
+                            script {
+                                if (BRANCH_NAME == 'devel') {
+                                    def timestamp = new Date().format('yyyyMMddHHmmss')
+                                    sh "sudo yap build ubuntu-noble . -r ${timestamp}"
+                                } else {
+                                    sh 'sudo yap build ubuntu-noble .'
+                                }
                             }
+                            stash includes: "artifacts/*noble*.deb", name: 'artifacts-noble-deb'
                         }
-                        stash includes: "artifacts/*noble*.deb", name: 'artifacts-noble-deb'
                     }
                     post {
                         always {
@@ -103,48 +112,54 @@ pipeline {
                 stage('RHEL 8') {
                     agent {
                         node {
-                            label 'yap-agent-rocky-8-v2'
+                            label 'yap-rocky-8-v1'
                         }
                     }
                     steps {
-                        unstash 'project'
-                        script {
-                            if (BRANCH_NAME == 'devel') {
-                                def timestamp = new Date().format('yyyyMMddHHmmss')
-                                sh "sudo yap build rocky-8 . -r ${timestamp}"
-                            } else {
-                                sh 'sudo yap build rocky-8 .'
+                        container('yap') {
+                            unstash 'project'
+                            sh 'sudo yap prepare rocky -g' 
+                            script {
+                                if (BRANCH_NAME == 'devel') {
+                                    def timestamp = new Date().format('yyyyMMddHHmmss')
+                                    sh "sudo yap build rocky-8 . -r ${timestamp}"
+                                } else {
+                                    sh 'sudo yap build rocky-8 .'
+                                }
                             }
+                            stash includes: 'artifacts/*el8*.rpm', name: 'artifacts-rocky-8'
                         }
-                        stash includes: 'artifacts/x86_64/*el8*.rpm', name: 'artifacts-rocky-8'
                     }
                     post {
                         always {
-                            archiveArtifacts artifacts: "artifacts/x86_64/*el8*.rpm", fingerprint: true
+                            archiveArtifacts artifacts: "artifacts/*el8*.rpm", fingerprint: true
                         }
                     }
                 }
                 stage('RHEL 9') {
                     agent {
                         node {
-                            label 'yap-agent-rocky-9-v2'
+                            label 'yap-rocky-9-v1'
                         }
                     }
                     steps {
-                        unstash 'project'
-                        script {
-                            if (BRANCH_NAME == 'devel') {
-                                def timestamp = new Date().format('yyyyMMddHHmmss')
-                                sh "sudo yap build rocky-9 . -r ${timestamp}"
-                            } else {
-                                sh 'sudo yap build rocky-9 .'
+                        container('yap') {
+                            unstash 'project'
+                            sh 'sudo yap prepare rocky -g' 
+                            script {
+                                if (BRANCH_NAME == 'devel') {
+                                    def timestamp = new Date().format('yyyyMMddHHmmss')
+                                    sh "sudo yap build rocky-9 . -r ${timestamp}"
+                                } else {
+                                    sh 'sudo yap build rocky-9 .'
+                                }
                             }
+                            stash includes: 'artifacts/*el9*.rpm', name: 'artifacts-rocky-9'
                         }
-                        stash includes: 'artifacts/x86_64/*el9*.rpm', name: 'artifacts-rocky-9'
                     }
                     post {
                         always {
-                            archiveArtifacts artifacts: "artifacts/x86_64/*el9*.rpm", fingerprint: true
+                            archiveArtifacts artifacts: "artifacts/*el9*.rpm", fingerprint: true
                         }
                     }
                 }
@@ -188,12 +203,12 @@ pipeline {
                                         "props": "deb.distribution=noble;deb.component=main;deb.architecture=amd64;vcs.revision=${env.GIT_COMMIT}"
                                     },
                                     {
-                                        "pattern": "artifacts/x86_64/(service-discover-base)-(*).el8.x86_64.rpm",
+                                        "pattern": "artifacts/(service-discover-base)-(*).el8.x86_64.rpm",
                                         "target": "centos8-playground/zextras/{1}/{1}-{2}.el8.x86_64.rpm",
                                         "props": "rpm.metadata.arch=x86_64;rpm.metadata.vendor=zextras;vcs.revision=${env.GIT_COMMIT}"
                                     },
                                     {
-                                        "pattern": "artifacts/x86_64/(service-discover-base)-(*).el9.x86_64.rpm",
+                                        "pattern": "artifacts/(service-discover-base)-(*).el9.x86_64.rpm",
                                         "target": "rhel9-playground/zextras/{1}/{1}-{2}.el9.x86_64.rpm",
                                         "props": "rpm.metadata.arch=x86_64;rpm.metadata.vendor=zextras;vcs.revision=${env.GIT_COMMIT}"
                                     }
@@ -238,12 +253,12 @@ pipeline {
                                         "props": "deb.distribution=noble;deb.component=main;deb.architecture=amd64;vcs.revision=${env.GIT_COMMIT}"
                                     },
                                     {
-                                        "pattern": "artifacts/x86_64/(service-discover-base)-(*).el8.x86_64.rpm",
+                                        "pattern": "artifacts/(service-discover-base)-(*).el8.x86_64.rpm",
                                         "target": "centos8-devel/zextras/{1}/{1}-{2}.el8.x86_64.rpm",
                                         "props": "rpm.metadata.arch=x86_64;rpm.metadata.vendor=zextras;vcs.revision=${env.GIT_COMMIT}"
                                     },
                                     {
-                                        "pattern": "artifacts/x86_64/(service-discover-base)-(*).el9.x86_64.rpm",
+                                        "pattern": "artifacts/(service-discover-base)-(*).el9.x86_64.rpm",
                                         "target": "rhel9-devel/zextras/{1}/{1}-{2}.el9.x86_64.rpm",
                                         "props": "rpm.metadata.arch=x86_64;rpm.metadata.vendor=zextras;vcs.revision=${env.GIT_COMMIT}"
                                     }
@@ -313,7 +328,7 @@ pipeline {
                     uploadSpec= """{
                                 "files": [
                                     {
-                                        "pattern": "artifacts/x86_64/(service-discover-base)-(*).el8.x86_64.rpm",
+                                        "pattern": "artifacts/(service-discover-base)-(*).el8.x86_64.rpm",
                                         "target": "centos8-rc/zextras/{1}/{1}-{2}.el8.x86_64.rpm",
                                         "props": "rpm.metadata.arch=x86_64;rpm.metadata.vendor=zextras;vcs.revision=${env.GIT_COMMIT}"
                                     }
@@ -340,7 +355,7 @@ pipeline {
                     uploadSpec= """{
                                 "files": [
                                     {
-                                        "pattern": "artifacts/x86_64/(service-discover-base)-(*).el9.x86_64.rpm",
+                                        "pattern": "artifacts/(service-discover-base)-(*).el9.x86_64.rpm",
                                         "target": "rhel9-rc/zextras/{1}/{1}-{2}.el9.x86_64.rpm",
                                         "props": "rpm.metadata.arch=x86_64;rpm.metadata.vendor=zextras;vcs.revision=${env.GIT_COMMIT}"
                                     }
