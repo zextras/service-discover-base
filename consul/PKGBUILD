@@ -14,10 +14,10 @@ priority="optional"
 url="https://www.zextras.com/"
 conflicts=("consul")
 source=(
-  "https://github.com/hashicorp/consul/archive/v${pkgver}.tar.gz"
+  "miacartella::git+https://github.com/mgarbin/consul.git#branch=fix_envoy_connect"
 )
 
-sha256sums=('2bd1d02c1781335bd319ccf4981c4dbfa44f77ae201a9a3e5684756aebb5bed6')
+sha256sums=('skip')
 
 build() {
   cd "${srcdir}/consul-${pkgver}"
