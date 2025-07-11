@@ -14,7 +14,7 @@ priority="optional"
 url="https://www.zextras.com/"
 conflicts=("consul")
 source=(
-  "miacartella::git+https://github.com/mgarbin/consul.git#branch=fix_envoy_connect"
+  "consul-${pkgver}::git+https://github.com/mgarbin/consul.git#branch=fix_envoy_connect"
 )
 
 sha256sums=('skip')
