@@ -3,7 +3,7 @@
 #   - https://www.consul.io/docs/connect/proxies/envoy
 
 pkgname="service-discover-base"
-pkgver="1.19.1"
+pkgver="1.21.4"
 pkgrel="1"
 pkgdesc="Service discover binary, based on HashiCorp Consul"
 maintainer="Zextras <packages@zextras.com>"
