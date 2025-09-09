@@ -118,7 +118,7 @@ pipeline {
                     steps {
                         container('yap') {
                             unstash 'project'
-                            sh 'sudo yap prepare rocky -g' 
+                            sh 'sudo yap prepare rocky-8 -g' 
                             script {
                                 if (BRANCH_NAME == 'devel') {
                                     def timestamp = new Date().format('yyyyMMddHHmmss')
@@ -145,7 +145,7 @@ pipeline {
                     steps {
                         container('yap') {
                             unstash 'project'
-                            sh 'sudo yap prepare rocky -g' 
+                            sh 'sudo yap prepare rocky-9 -g' 
                             script {
                                 if (BRANCH_NAME == 'devel') {
                                     def timestamp = new Date().format('yyyyMMddHHmmss')
