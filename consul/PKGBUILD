@@ -15,10 +15,12 @@ url="https://www.zextras.com/"
 conflicts=("consul")
 source=(
   "https://github.com/hashicorp/consul/archive/v${pkgver}.tar.gz"
+  "systemd-sysuser.conf"
 )
 
 sha256sums=(
   'f6c5a2a67c422b447afc91b3eafbf5740ca26b5c85aac1832a23fb737807f6a0'
+  'eb5c907c078716ed13f9285086272ba12809eeb841c148ac73db3332e3534ac4'
 )
 
 build() {
@@ -35,4 +37,12 @@ package() {
 
   install -Dm755 consul \
     "${pkgdir}/usr/bin/consul"
+
+  # systemd sysusers.d
+  install -Dm644 "${srcdir}/systemd-sysuser.conf" \
+    "${pkgdir}/usr/lib/sysusers.d/service-discover.conf"
+}
+
+postinst() {
+  systemd-sysusers /usr/lib/sysusers.d/service-discover.conf >/dev/null 2>&1 || :
 }
