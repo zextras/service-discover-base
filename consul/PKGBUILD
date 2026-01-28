@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2021-2026 Zextras <https://www.zextras.com>
+#
+# SPDX-License-Identifier: AGPL-3.0-only
+
 # Please refer to the table below to check envoy and consul
 # compatibility:
 #   - https://www.consul.io/docs/connect/proxies/envoy
@@ -20,7 +24,7 @@ source=(
 
 sha256sums=(
   'f6c5a2a67c422b447afc91b3eafbf5740ca26b5c85aac1832a23fb737807f6a0'
-  'eb5c907c078716ed13f9285086272ba12809eeb841c148ac73db3332e3534ac4'
+  'ee3f2413084b52f5cfa310ce5e1311d86283848e5405cad992365dfea1db80ce'
 )
 
 build() {
