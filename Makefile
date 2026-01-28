@@ -78,7 +78,7 @@ help:
 build:
 	@echo "Building service-discover-base for $(TARGET)..."
 	@mkdir -p $(OUTPUT_DIR) $(CCACHE_DIR)
-	$(CONTAINER_RUNTIME) run $(CONTAINER_OPTS) $(YAP_IMAGE) -c "yap prepare $(TARGET) && yap build $(TARGET) /project/consul"
+	$(CONTAINER_RUNTIME) run $(CONTAINER_OPTS) $(YAP_IMAGE) -c "yap prepare $(TARGET) -g && yap build $(TARGET) /project/consul"
 
 ## pull: Pull the YAP container image for the specified TARGET
 pull:
