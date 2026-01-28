@@ -1,1 +1,5 @@
-artifacts
+artifacts/
+consul/src/
+*.tar.gz
+*.deb
+*.rpm
