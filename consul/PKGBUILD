@@ -19,11 +19,15 @@ url="https://www.zextras.com/"
 conflicts=("consul")
 source=(
   "https://github.com/hashicorp/consul/archive/v${pkgver}.tar.gz"
+  "service-discover.target"
+  "service-discover-wrapper.sh"
   "systemd-sysuser.conf"
 )
 
 sha256sums=(
   'f6c5a2a67c422b447afc91b3eafbf5740ca26b5c85aac1832a23fb737807f6a0'
+  'd5c95901ad8cb5245cb460ebcb597af10005a7ee13cd00618e47ffda882675ac'
+  '8853981222712d9caed2a5e0d5f8f16264a149f134dc825811fa861d9e32c255'
   'ee3f2413084b52f5cfa310ce5e1311d86283848e5405cad992365dfea1db80ce'
 )
 
@@ -36,17 +40,99 @@ build() {
     go build -ldflags="-s -w"
 }
 
-package() {
+_package_legacy() {
   cd "${srcdir}/consul-${pkgver}"
 
   install -Dm755 consul \
     "${pkgdir}/usr/bin/consul"
 
-  # systemd sysusers.d
+  install -Dm755 "${srcdir}/service-discover-wrapper.sh" \
+    "${pkgdir}/usr/bin/service-discover-wrapper.sh"
+
   install -Dm644 "${srcdir}/systemd-sysuser.conf" \
     "${pkgdir}/usr/lib/sysusers.d/service-discover.conf"
 }
 
-postinst() {
+_package_systemd() {
+  cd "${srcdir}/consul-${pkgver}"
+
+  install -Dm755 consul \
+    "${pkgdir}/usr/bin/consul"
+
+  install -Dm755 "${srcdir}/service-discover-wrapper.sh" \
+    "${pkgdir}/usr/bin/service-discover-wrapper.sh"
+
+  install -Dm644 "${srcdir}/service-discover.target" \
+    "${pkgdir}/lib/systemd/system/service-discover.target"
+
+  install -Dm644 "${srcdir}/systemd-sysuser.conf" \
+    "${pkgdir}/usr/lib/sysusers.d/service-discover.conf"
+}
+
+_postinst_legacy() {
   systemd-sysusers /usr/lib/sysusers.d/service-discover.conf >/dev/null 2>&1 || :
+}
+
+_postinst_systemd() {
+  systemd-sysusers /usr/lib/sysusers.d/service-discover.conf >/dev/null 2>&1 || :
+  if [ -d /run/systemd/system ]; then
+    systemctl daemon-reload &>/dev/null || :
+    systemctl enable service-discover.target &>/dev/null || :
+  fi
+}
+
+_prerm_systemd() {
+  if [ -d /run/systemd/system ]; then
+    systemctl --no-reload disable --now service-discover.target &>/dev/null || :
+  fi
+}
+
+postrm() {
+  if [ -d /run/systemd/system ]; then
+    systemctl daemon-reload &>/dev/null || :
+  fi
+}
+
+package() {
+  _package_systemd
+}
+
+package__rocky_8() {
+  _package_legacy
+}
+
+package__rocky_9() {
+  _package_systemd
+}
+
+package__ubuntu_jammy() {
+  _package_legacy
+}
+
+package__ubuntu_noble() {
+  _package_systemd
+}
+
+postinst__rocky_8() {
+  _postinst_legacy
+}
+
+postinst__rocky_9() {
+  _postinst_systemd
+}
+
+postinst__ubuntu_jammy() {
+  _postinst_legacy
+}
+
+postinst__ubuntu_noble() {
+  _postinst_systemd
+}
+
+prerm__rocky_9() {
+  _prerm_systemd
+}
+
+prerm__ubuntu_noble() {
+  _prerm_systemd
 }

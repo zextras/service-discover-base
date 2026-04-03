@@ -1,0 +1,12 @@
+# SPDX-FileCopyrightText: 2024-2026 Zextras <https://www.zextras.com>
+#
+# SPDX-License-Identifier: AGPL-3.0-only
+
+[Unit]
+Description=Zextras Service Discovery
+Documentation=https://docs.zextras.com/
+After=network-online.target
+PartOf=carbonio.target
+
+[Install]
+WantedBy=carbonio.target multi-user.target
