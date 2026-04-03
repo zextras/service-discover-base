@@ -6,6 +6,7 @@
 Description=Zextras Service Discovery
 Documentation=https://docs.zextras.com/
 After=network-online.target
+PartOf=carbonio.target
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=carbonio.target multi-user.target
