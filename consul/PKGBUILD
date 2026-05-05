@@ -8,7 +8,7 @@
 
 pkgname="service-discover-base"
 pkgver="1.21.4"
-pkgrel="2"
+pkgrel="3"
 pkgdesc="Service discover binary, based on HashiCorp Consul"
 maintainer="Zextras <packages@zextras.com>"
 arch=('x86_64')
