@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 library(
-    identifier: 'jenkins-lib-common@1.7.5',
+    identifier: 'jenkins-lib-common@v2.5.0',
     retriever: modernSCM([
         $class: 'GitSCMSource',
         credentialsId: 'jenkins-integration-with-github-account',
@@ -40,6 +40,13 @@ pipeline {
             steps {
                 echo 'Building deb/rpm packages'
                 buildStage([
+                    prepare: true,
+                    prepareFlags: ' -g ',
+                ])
+                buildStage([
+                    architecture: 'aarch64',
+                    distros: ['ubuntu-jammy'],
+                    parallelBuilds: false,
                     prepare: true,
                     prepareFlags: ' -g ',
                 ])
