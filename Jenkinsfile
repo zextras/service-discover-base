@@ -34,6 +34,12 @@ pipeline {
             }
         }
 
+        stage('Skip CI') {
+            steps {
+                script { semanticRelease.guard() }
+            }
+        }
+
         stage('Security Scan') {
             steps { gitleaksStage() }
         }
@@ -66,6 +72,12 @@ pipeline {
                     architecture: 'aarch64',
                     distros: ['ubuntu-jammy'],
                 )
+            }
+        }
+
+        stage('Semantic Release') {
+            steps {
+                semanticRelease()
             }
         }
     }
