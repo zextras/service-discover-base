@@ -34,6 +34,12 @@ pipeline {
             }
         }
 
+        stage('Skip CI') {
+            steps {
+                script { semanticRelease.guard() }
+            }
+        }
+
         stage('Security Scan') {
             steps { gitleaksStage() }
         }
