@@ -2,13 +2,15 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-only
 
-# Please refer to the table below to check envoy and consul
-# compatibility:
-#   - https://www.consul.io/docs/connect/proxies/envoy
+# `consul connect envoy` refuses Envoy versions outside the range compiled
+# into Consul (envoyextensions/xdscommon/ENVOY_VERSIONS): Consul 2.1.x
+# accepts Envoy 1.36 - 1.39. Keep the envoyproxy conflict below and the
+# service-discover-base conflict in zextras/envoyproxy in sync.
+#   - https://developer.hashicorp.com/consul/docs/connect/proxies/envoy
 
 pkgname="service-discover-base"
-pkgver="1.21.4"
-pkgrel="3"
+pkgver="2.1.0" # renovate: datasource=github-releases depName=hashicorp/consul
+pkgrel="1"
 pkgdesc="Service discover binary, based on HashiCorp Consul"
 maintainer="Zextras <packages@zextras.com>"
 arch=('aarch64' 'x86_64')
@@ -16,7 +18,10 @@ license=("MPL-2.0")
 section="admin"
 priority="optional"
 url="https://www.zextras.com/"
-conflicts=("consul")
+conflicts=(
+  "consul"
+  "envoyproxy<1.36.0"
+)
 source=(
   "https://github.com/hashicorp/consul/archive/v${pkgver}.tar.gz"
   "service-discover.target"
@@ -25,7 +30,7 @@ source=(
 )
 
 sha256sums=(
-  'f6c5a2a67c422b447afc91b3eafbf5740ca26b5c85aac1832a23fb737807f6a0'
+  '208087b8f4d546cd186849ebfa162b5a34703dbdc5ee75f96d061177690f7b8d'
   'd5c95901ad8cb5245cb460ebcb597af10005a7ee13cd00618e47ffda882675ac'
   '8853981222712d9caed2a5e0d5f8f16264a149f134dc825811fa861d9e32c255'
   'ee3f2413084b52f5cfa310ce5e1311d86283848e5405cad992365dfea1db80ce'
@@ -36,8 +41,10 @@ build() {
 
   # consul is incompatible with -buildmode=pie
   export GOFLAGS="-trimpath -mod=readonly -modcacherw"
+  # hashicorpmetrics: keep Raft, Serf and Memberlist metrics, as upstream
+  # release builds do since Consul 2.0.
   CGO_ENABLED=0 \
-    go build -ldflags="-s -w"
+    go build -tags=hashicorpmetrics -ldflags="-s -w"
 }
 
 _package_legacy() {

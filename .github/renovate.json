@@ -1,4 +1,13 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["github>zextras/infra-renovate-config"]
+  "extends": ["github>zextras/infra-renovate-config"],
+  "packageRules": [
+    {
+      "description": "Each Consul release accepts only some Envoy branches. Bump Consul and envoyproxy together so the shipped Envoy stays on an upstream-supported branch.",
+      "matchPackageNames": ["hashicorp/consul"],
+      "prBodyNotes": [
+        "Envoy compatibility: check `envoyextensions/xdscommon/ENVOY_VERSIONS` at the new tag. The shipped envoyproxy (zextras/envoyproxy) must be in that range. If the range changes, update the `envoyproxy<…` conflict in `consul/PKGBUILD`, and in zextras/envoyproxy update the `service-discover-base<…` conflict and the Renovate `allowedVersions` cap. Envoy branch support dates: https://github.com/envoyproxy/envoy/blob/main/RELEASES.md"
+      ]
+    }
+  ]
 }
