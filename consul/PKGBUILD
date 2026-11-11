@@ -9,7 +9,7 @@
 #   - https://developer.hashicorp.com/consul/docs/connect/proxies/envoy
 
 pkgname="service-discover-base"
-pkgver="2.1.0"
+pkgver="2.1.0" # renovate: datasource=github-releases depName=hashicorp/consul
 pkgrel="1"
 pkgdesc="Service discover binary, based on HashiCorp Consul"
 maintainer="Zextras <packages@zextras.com>"
