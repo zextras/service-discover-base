@@ -39,6 +39,11 @@ while [ -z "$admin_port" ] && [ "$elapsed" -lt "$READY_TIMEOUT" ]; do
   if [ -s "$ADMIN_FILE" ]; then
     admin_port=$(cat "$ADMIN_FILE")
   fi
+  # Stop waiting as soon as envoy is gone (e.g. consul unreachable);
+  # the check below reports it and propagates the exit status.
+  if [ -z "$admin_port" ] && ! kill -0 "$ENVOY_PID" 2>/dev/null; then
+    break
+  fi
 done
 
 if ! kill -0 "$ENVOY_PID" 2>/dev/null; then
