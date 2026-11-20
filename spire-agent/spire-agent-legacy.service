@@ -1,0 +1,29 @@
+# SPDX-FileCopyrightText: 2026 Zextras <https://www.zextras.com>
+#
+# SPDX-License-Identifier: AGPL-3.0-only
+
+[Unit]
+Description=Zextras SPIRE Agent
+Documentation=https://spiffe.io/docs/latest/
+After=network-online.target
+Wants=network-online.target
+ConditionPathExists=/etc/zextras/spire/agent.conf
+
+[Service]
+Type=simple
+User=spire-agent
+Group=spire-agent
+ExecStart=/usr/bin/spire-agent run -config /etc/zextras/spire/agent.conf
+Restart=on-failure
+RestartSec=5s
+StateDirectory=spire/agent
+StateDirectoryMode=0700
+# The Workload API socket must be reachable by every service user: the agent
+# identifies the caller from the socket peer credentials.
+RuntimeDirectory=spire/agent
+RuntimeDirectoryMode=0755
+RuntimeDirectoryPreserve=restart
+UMask=0027
+
+[Install]
+WantedBy=multi-user.target

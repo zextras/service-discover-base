@@ -6,6 +6,12 @@
     "projects": [
         {
             "name": "consul"
+        },
+        {
+            "name": "spire-server"
+        },
+        {
+            "name": "spire-agent"
         }
     ]
 }

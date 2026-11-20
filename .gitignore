@@ -1,5 +1,7 @@
 artifacts/
 consul/src/
+spire-server/src/
+spire-agent/src/
 *.tar.gz
 *.deb
 *.rpm
