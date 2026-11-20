@@ -1,0 +1,115 @@
+# SPDX-FileCopyrightText: 2026 Zextras <https://www.zextras.com>
+#
+# SPDX-License-Identifier: AGPL-3.0-only
+
+# SPIRE agent. It attests the node to the SPIRE server and serves the Workload
+# API: each service gets the JWT-SVID it presents to Consul. Configuration is
+# written by `service-discover setup`; the unit does not start until it exists.
+#   - https://spiffe.io/docs/latest/deploying/spire_agent/
+
+pkgname="service-discover-spire-agent"
+pkgver="1.16.0" # renovate: datasource=github-releases depName=spiffe/spire
+pkgrel="1"
+pkgdesc="SPIRE agent for service discover"
+maintainer="Zextras <packages@zextras.com>"
+arch=('aarch64' 'x86_64')
+license=("Apache-2.0")
+section="admin"
+priority="optional"
+url="https://www.zextras.com/"
+depends=(
+  "service-discover-base"
+)
+source=(
+  "https://github.com/spiffe/spire/archive/v${pkgver}.tar.gz"
+  "spire-agent.service"
+  "spire-agent-legacy.service"
+  "systemd-sysuser.conf"
+)
+
+sha256sums=(
+  '5a3423c403f5bbe8bbd4595e56715e06610598854af364ad298ca6717473d9b3'
+  '0de7345f9dd874f2dae30ffad83182651345b8996640c5ec2b1998c198252ae4'
+  '2a4fa5756563c8711001e3eed6d163d59b9f2208ba1f6e9dd2dfdb49a11f5bed'
+  'f5e44c3b6166c5e9ed94031ba0b31e976ca4648c8dbc229a39437c1883850cd9'
+)
+
+build() {
+  cd "${srcdir}/spire-${pkgver}"
+
+  export GOFLAGS="-trimpath -mod=readonly -modcacherw"
+  CGO_ENABLED=0 \
+    go build -ldflags="-s -w -X github.com/spiffe/spire/pkg/common/version.gittag=${pkgver}" \
+    -o spire-agent ./cmd/spire-agent
+}
+
+_package_legacy() {
+  cd "${srcdir}/spire-${pkgver}"
+
+  install -Dm755 spire-agent \
+    "${pkgdir}/usr/bin/spire-agent"
+
+  install -Dm644 LICENSE \
+    "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+
+  install -Dm644 "${srcdir}/systemd-sysuser.conf" \
+    "${pkgdir}/usr/lib/sysusers.d/spire-agent.conf"
+
+  install -Dm644 "${srcdir}/spire-agent-legacy.service" \
+    "${pkgdir}/lib/systemd/system/spire-agent.service"
+}
+
+_package_systemd() {
+  cd "${srcdir}/spire-${pkgver}"
+
+  install -Dm755 spire-agent \
+    "${pkgdir}/usr/bin/spire-agent"
+
+  install -Dm644 LICENSE \
+    "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+
+  install -Dm644 "${srcdir}/systemd-sysuser.conf" \
+    "${pkgdir}/usr/lib/sysusers.d/spire-agent.conf"
+
+  install -Dm644 "${srcdir}/spire-agent.service" \
+    "${pkgdir}/lib/systemd/system/spire-agent.service"
+}
+
+postinst() {
+  systemd-sysusers /usr/lib/sysusers.d/spire-agent.conf >/dev/null 2>&1 || :
+  if [ -d /run/systemd/system ]; then
+    systemctl daemon-reload &>/dev/null || :
+  fi
+}
+
+prerm() {
+  if [ -d /run/systemd/system ]; then
+    systemctl --no-reload disable --now spire-agent.service &>/dev/null || :
+  fi
+}
+
+postrm() {
+  if [ -d /run/systemd/system ]; then
+    systemctl daemon-reload &>/dev/null || :
+  fi
+}
+
+package() {
+  _package_systemd
+}
+
+package__rocky_8() {
+  _package_legacy
+}
+
+package__rocky_9() {
+  _package_systemd
+}
+
+package__ubuntu_jammy() {
+  _package_legacy
+}
+
+package__ubuntu_noble() {
+  _package_systemd
+}

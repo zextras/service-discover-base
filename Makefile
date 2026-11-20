@@ -14,7 +14,7 @@
 
 # Configuration
 YAP_IMAGE_PREFIX ?= docker.io/m0rf30/yap
-YAP_VERSION ?= 1.47
+YAP_VERSION ?= v2.0.7
 CONTAINER_RUNTIME ?= $(shell command -v podman >/dev/null 2>&1 && echo podman || echo docker)
 
 # Build directories
@@ -33,7 +33,7 @@ YAP_IMAGE = $(YAP_IMAGE_PREFIX)-$(TARGET):$(YAP_VERSION)
 CONTAINER_NAME ?= yap-$(TARGET)-service-discover
 
 # Container options
-CONTAINER_OPTS = --rm -ti \
+CONTAINER_OPTS = --rm -ti --user root \
 	--name $(CONTAINER_NAME) \
 	--entrypoint bash \
 	-v $(CURDIR):/project \
@@ -78,7 +78,7 @@ help:
 build:
 	@echo "Building service-discover-base for $(TARGET)..."
 	@mkdir -p $(OUTPUT_DIR) $(CCACHE_DIR)
-	$(CONTAINER_RUNTIME) run $(CONTAINER_OPTS) $(YAP_IMAGE) -c "yap prepare $(TARGET) -g && yap build $(TARGET) /project/consul"
+	$(CONTAINER_RUNTIME) run $(CONTAINER_OPTS) $(YAP_IMAGE) -c "yap prepare $(TARGET) -g && yap build $(TARGET) /project"
 
 ## pull: Pull the YAP container image for the specified TARGET
 pull:
@@ -89,7 +89,7 @@ pull:
 clean:
 	@echo "Cleaning build artifacts..."
 	rm -rf $(OUTPUT_DIR)
-	rm -rf consul/artifacts
+	rm -rf consul/artifacts spire-server/artifacts spire-agent/artifacts
 
 ## list-targets: List supported distribution targets
 list-targets:

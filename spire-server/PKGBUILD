@@ -1,0 +1,141 @@
+# SPDX-FileCopyrightText: 2026 Zextras <https://www.zextras.com>
+#
+# SPDX-License-Identifier: AGPL-3.0-only
+
+# SPIRE server and OIDC discovery provider. The server issues the node and
+# workload identities; the OIDC discovery provider publishes its JWT signing
+# keys for the Consul auto_config authorizer and the `jwt` auth method.
+# Configuration is written by `service-discover setup`; the units do not start
+# until it exists.
+#   - https://spiffe.io/docs/latest/deploying/spire_server/
+
+pkgname="service-discover-spire-server"
+pkgver="1.16.0" # renovate: datasource=github-releases depName=spiffe/spire
+pkgrel="1"
+pkgdesc="SPIRE server and OIDC discovery provider for service discover"
+maintainer="Zextras <packages@zextras.com>"
+arch=('aarch64' 'x86_64')
+license=("Apache-2.0")
+section="admin"
+priority="optional"
+url="https://www.zextras.com/"
+depends=(
+  "service-discover-base"
+)
+makedepends=(
+  "gcc"
+)
+source=(
+  "https://github.com/spiffe/spire/archive/v${pkgver}.tar.gz"
+  "spire-server.service"
+  "spire-server-legacy.service"
+  "spire-oidc-discovery-provider.service"
+  "spire-oidc-discovery-provider-legacy.service"
+  "systemd-sysuser.conf"
+)
+
+sha256sums=(
+  '5a3423c403f5bbe8bbd4595e56715e06610598854af364ad298ca6717473d9b3'
+  '66b818f63d093c736326328f9513e181941bea22847b80ba1348d9125bcdfd2b'
+  '92c1980253f5cdf6b38bd4f779e0028d87537c6a4e94c381c3089de77e8692d2'
+  'a2acc210d65f710755de2df9f79c979ba69eeaf92161294f8b5b33a74c43071d'
+  'eacc01df5e3c5c0d37d06cd93e92bc72dfa40596c3d6d2eda747e012bd1286ab'
+  '11c50fe302a4e0a95eab7539257f983d18b2d4d9cd96aed482b33ccb9eb639f7'
+)
+
+build() {
+  cd "${srcdir}/spire-${pkgver}"
+
+  export GOFLAGS="-trimpath -mod=readonly -modcacherw"
+  _ldflags="-s -w -X github.com/spiffe/spire/pkg/common/version.gittag=${pkgver}"
+
+  # the SQLite datastore needs cgo
+  CGO_ENABLED=1 \
+    go build -ldflags="${_ldflags}" -o spire-server ./cmd/spire-server
+  CGO_ENABLED=0 \
+    go build -ldflags="${_ldflags}" -o oidc-discovery-provider ./support/oidc-discovery-provider
+}
+
+_package_legacy() {
+  cd "${srcdir}/spire-${pkgver}"
+
+  install -Dm755 spire-server \
+    "${pkgdir}/usr/bin/spire-server"
+
+  install -Dm755 oidc-discovery-provider \
+    "${pkgdir}/usr/bin/spire-oidc-discovery-provider"
+
+  install -Dm644 LICENSE \
+    "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+
+  install -Dm644 "${srcdir}/systemd-sysuser.conf" \
+    "${pkgdir}/usr/lib/sysusers.d/spire-server.conf"
+
+  install -Dm644 "${srcdir}/spire-server-legacy.service" \
+    "${pkgdir}/lib/systemd/system/spire-server.service"
+
+  install -Dm644 "${srcdir}/spire-oidc-discovery-provider-legacy.service" \
+    "${pkgdir}/lib/systemd/system/spire-oidc-discovery-provider.service"
+}
+
+_package_systemd() {
+  cd "${srcdir}/spire-${pkgver}"
+
+  install -Dm755 spire-server \
+    "${pkgdir}/usr/bin/spire-server"
+
+  install -Dm755 oidc-discovery-provider \
+    "${pkgdir}/usr/bin/spire-oidc-discovery-provider"
+
+  install -Dm644 LICENSE \
+    "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+
+  install -Dm644 "${srcdir}/systemd-sysuser.conf" \
+    "${pkgdir}/usr/lib/sysusers.d/spire-server.conf"
+
+  install -Dm644 "${srcdir}/spire-server.service" \
+    "${pkgdir}/lib/systemd/system/spire-server.service"
+
+  install -Dm644 "${srcdir}/spire-oidc-discovery-provider.service" \
+    "${pkgdir}/lib/systemd/system/spire-oidc-discovery-provider.service"
+}
+
+postinst() {
+  systemd-sysusers /usr/lib/sysusers.d/spire-server.conf >/dev/null 2>&1 || :
+  if [ -d /run/systemd/system ]; then
+    systemctl daemon-reload &>/dev/null || :
+  fi
+}
+
+prerm() {
+  if [ -d /run/systemd/system ]; then
+    systemctl --no-reload disable --now \
+      spire-oidc-discovery-provider.service spire-server.service &>/dev/null || :
+  fi
+}
+
+postrm() {
+  if [ -d /run/systemd/system ]; then
+    systemctl daemon-reload &>/dev/null || :
+  fi
+}
+
+package() {
+  _package_systemd
+}
+
+package__rocky_8() {
+  _package_legacy
+}
+
+package__rocky_9() {
+  _package_systemd
+}
+
+package__ubuntu_jammy() {
+  _package_legacy
+}
+
+package__ubuntu_noble() {
+  _package_systemd
+}
