@@ -1,0 +1,28 @@
+# SPDX-FileCopyrightText: 2026 Zextras <https://www.zextras.com>
+#
+# SPDX-License-Identifier: AGPL-3.0-only
+
+[Unit]
+Description=Zextras SPIRE Server
+Documentation=https://spiffe.io/docs/latest/
+After=network-online.target
+Wants=network-online.target
+ConditionPathExists=/etc/zextras/spire/server.conf
+
+[Service]
+Type=simple
+User=spire-server
+Group=spire-server
+ExecStart=/usr/bin/spire-server run -config /etc/zextras/spire/server.conf
+Restart=on-failure
+RestartSec=5s
+StateDirectory=spire/server
+StateDirectoryMode=0700
+RuntimeDirectory=spire/server
+RuntimeDirectoryMode=0750
+RuntimeDirectoryPreserve=restart
+UMask=0027
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,47 @@
+# SPDX-FileCopyrightText: 2026 Zextras <https://www.zextras.com>
+#
+# SPDX-License-Identifier: AGPL-3.0-only
+
+[Unit]
+Description=Zextras SPIRE Server
+Documentation=https://spiffe.io/docs/latest/
+After=network-online.target
+Wants=network-online.target
+ConditionPathExists=/etc/zextras/spire/server.conf
+PartOf=service-discover.target
+
+[Service]
+Type=simple
+User=spire-server
+Group=spire-server
+ExecStart=/usr/bin/spire-server run -config /etc/zextras/spire/server.conf
+Restart=on-failure
+RestartSec=5s
+StateDirectory=spire/server
+StateDirectoryMode=0700
+RuntimeDirectory=spire/server
+RuntimeDirectoryMode=0750
+RuntimeDirectoryPreserve=restart
+UMask=0027
+LimitNOFILE=65536
+
+# Hardening
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateDevices=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+RestrictRealtime=yes
+RestrictNamespaces=yes
+RestrictSUIDSGID=yes
+NoNewPrivileges=yes
+LockPersonality=yes
+ProtectHostname=yes
+ProtectClock=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+
+[Install]
+WantedBy=service-discover.target

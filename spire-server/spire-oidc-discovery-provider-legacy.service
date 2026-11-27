@@ -1,0 +1,23 @@
+# SPDX-FileCopyrightText: 2026 Zextras <https://www.zextras.com>
+#
+# SPDX-License-Identifier: AGPL-3.0-only
+
+[Unit]
+Description=Zextras SPIRE OIDC Discovery Provider
+Documentation=https://spiffe.io/docs/latest/
+After=spire-server.service
+Requires=spire-server.service
+ConditionPathExists=/etc/zextras/spire/oidc-discovery-provider.conf
+
+[Service]
+Type=simple
+User=spire-server
+Group=spire-server
+ExecStart=/usr/bin/spire-oidc-discovery-provider -config /etc/zextras/spire/oidc-discovery-provider.conf
+Restart=on-failure
+RestartSec=5s
+StateDirectory=spire/oidc-discovery-provider
+StateDirectoryMode=0700
+
+[Install]
+WantedBy=multi-user.target
